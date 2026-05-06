@@ -18,10 +18,6 @@ def get_available_origins():
 
     container = soup.find("div", class_="entry-content")
 
-    if not container:
-        print("Could not find origin container")
-        return origins
-
     links = container.find_all("a")
 
     for link in links:

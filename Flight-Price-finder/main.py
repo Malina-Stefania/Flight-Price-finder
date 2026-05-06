@@ -1,64 +1,88 @@
 from scraper import get_available_origins, scrape_city_flights
 from search_engine import SearchEngine
-from utils import get_similar_destinations
+from utils import get_similar_destinations, get_similar_origins
 
 
 def main():
     print("=== Flight Finder ===")
 
-    origin_input = input("Enter origin: ")
-    destination = input("Enter destination: ")
+    while True:
+        origin_input = input("\nEnter origin: ")
+        destination = input("Enter destination: ")
 
-    print("\nLoading available origins...\n")
+        origins = get_available_origins()
+        engine = SearchEngine()
 
-    origins = get_available_origins()
+        flights = []
+        used_similar_origin = None
 
-    if origin_input not in origins:
-        print("Origin not found on site.")
-        return
+        if origin_input in origins:
+            print("Searching flights...\n")
+            flights = scrape_city_flights(origins[origin_input])
 
-    city_url = origins[origin_input]
+        else:
+            print("\nOrigin not found. Trying similar origins...\n")
+            similar_origins = get_similar_origins(origin_input)
 
-    print("Searching flights...\n")
+            for sim_origin in similar_origins:
+                if sim_origin in origins:
+                    print("Trying:", sim_origin)
 
-    flights = scrape_city_flights(city_url)
+                    flights = scrape_city_flights(origins[sim_origin])
 
-    engine = SearchEngine()
+                    if flights:
+                        used_similar_origin = sim_origin
+                        break
 
-    results = engine.search_by_destination(flights, destination)
+            if not flights:
+                print("No flights found from similar origins.")
 
-    if results:
-        print("Results found:\n")
+                again = input("\nSearch again? (yes/no): ")
+                if again.lower() != "yes":
+                    print("Goodbye!")
+                    break
+                else:
+                    continue
 
-        results = sorted(results, key=lambda x: min(x.prices.values()))
+        results = engine.search_by_destination(flights, destination)
 
-        for flight in results[:5]:
-            print(flight)
+        if results:
+            results = sorted(results, key=lambda x: min(x.prices.values()))
 
-    else:
-        print("No results found for your destination.\n")
-        print("Trying similar destinations...\n")
+            for flight in results[:5]:
+                print(flight)
 
-        similar = get_similar_destinations(destination)
+        else:
+            print("No results found for your destination.\n")
+            print("Trying similar destinations...\n")
 
-        found = False
+            similar = get_similar_destinations(destination)
 
-        for dest in similar:
-            results = engine.search_by_destination(flights, dest)
+            found = False
 
-            if results:
-                print("Found results for:", dest, "\n")
+            for dest in similar:
+                results = engine.search_by_destination(flights, dest)
 
-                results = sorted(results, key=lambda x: min(x.prices.values()))
+                if results:
+                    print("Found results for:", dest, "\n")
 
-                for flight in results[:5]:
-                    print(flight)
+                    results = sorted(results, key=lambda x: min(x.prices.values()))
 
-                found = True
-                break
+                    for flight in results[:5]:
+                        print(flight)
 
-        if not found:
-            print("No flights found at all.")
+                    found = True
+                    break
+
+            if not found:
+                print("No flights found at all.")
+
+        again = input("\nSearch another flight? (yes/no): ")
+
+        if again.lower() != "yes":
+            print("Goodbye!")
+            break
+
 
 if __name__ == "__main__":
     main()
