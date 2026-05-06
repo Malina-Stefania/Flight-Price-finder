@@ -28,11 +28,10 @@ def main():
                 if sim_origin in origins:
                     print("Trying:", sim_origin)
 
-                    flights = scrape_city_flights(origins[sim_origin])
+                    new_flights = scrape_city_flights(origins[sim_origin])
 
-                    if flights:
-                        used_similar_origin = sim_origin
-                        break
+                    if new_flights:
+                        flights.extend(new_flights)
 
             if not flights:
                 print("No flights found from similar origins.")
